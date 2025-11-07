@@ -66,7 +66,7 @@ public class BalanceRepository {
     private String generateId(Balance balance) {
         String accPart = balance.getAccountNumber() != null ? balance.getAccountNumber() : "no-account";
         String datePart = balance.getDate() != null ? balance.getDate().toString() : "no-date";
-        return accPart + "_" + datePart;
+        return accPart + "_" + datePart + "_" + UUID.randomUUID();
     }
 
     public List<Balance> findByAccount(String accountNumber) {
