@@ -4,12 +4,16 @@ import java.util.List;
 import java.util.Scanner;
 import model.Account;
 import model.Balance;
+import model.Loans;
 import services.AccountService;
 import services.BalanceService;
+import services.LoansService;
 
 public class App {
     private static AccountService accountService = new AccountService();
     private static BalanceService balanceService = new BalanceService();
+    private static LoansService loansService = new LoansService();
+
     public static void main(String[] args) throws Exception {
         /*accountService.findAll().stream().forEach(a->System.out.println(a));
         Account account = new Account("ACC010", "Johanny Valencia", "johanny.valencia@example.com", "3000000001",
@@ -38,7 +42,7 @@ public class App {
                         runCrudMenuBalance(sc, "Balance");
                         break;
                     case "3":
-                        runCrudMenu(sc, "Loans");
+                        runCrudMenuLoans(sc, "Loans");
                         break;
                     case "4":
                         runCrudMenu(sc, "Cards");
@@ -334,6 +338,97 @@ public class App {
     }
 }
 
+private static void runCrudMenuLoans(Scanner sc, String entityName) {
+    boolean back = false;
+    while (!back) {
+        printCrudMenuLoans(entityName); 
+        String opt = sc.nextLine().trim();
+
+        switch (opt) {
+            case "1": 
+                System.out.print("Ingrese el accountNumber de la cuenta: ");
+                String accNumberCreate = sc.nextLine().trim().toUpperCase();
+
+                accountService.findById(accNumberCreate).ifPresentOrElse(
+                    acc -> {
+                        System.out.print("Ingrese el tipo de préstamo (Hipotecario, Personal, Educativo, Vehicular): ");
+                        String type = sc.nextLine().trim();
+                        System.out.print("Ingrese el monto total del préstamo: ");
+                        BigDecimal totalLoan = sc.nextBigDecimal();
+                        sc.nextLine(); 
+
+                        loansService.createLoan(acc.getAccountNumber(), type, totalLoan);
+                        System.out.println("Préstamo creado exitosamente para la cuenta " + acc.getAccountNumber());
+                    },
+                    () -> System.out.println("Cuenta con ID " + accNumberCreate + " no encontrada.")
+                );
+                break;
+
+            case "2": 
+                System.out.print("Ingrese el ID del préstamo (solo accountNumber): ");
+                String loanId = sc.nextLine().trim().toUpperCase();
+
+                loansService.findById(loanId).ifPresentOrElse(
+                    loan -> System.out.println("Préstamo encontrado: " + loan),
+                    () -> System.out.println("No se encontró préstamo con ID " + loanId)
+                );
+                break;
+
+            case "3": 
+                System.out.print("Ingrese el accountNumber de la cuenta: ");
+                String accNumberList = sc.nextLine().trim().toUpperCase();
+
+                List<Loans> loansList = loansService.findByAccountNumber(accNumberList);
+                if (loansList.isEmpty()) {
+                    System.out.println("No hay préstamos registrados para la cuenta " + accNumberList);
+                } else {
+                    System.out.println("Préstamos de la cuenta " + accNumberList + ":");
+                    for (Loans loan : loansList) {
+                        System.out.println(loan);
+                    }
+                }
+                break;
+
+            case "4": 
+                System.out.print("Ingrese el accountNumber de la cuenta: ");
+                String accNumberPayment = sc.nextLine().trim().toUpperCase();
+
+                System.out.print("Ingrese el monto del pago: ");
+                BigDecimal paymentAmount = sc.nextBigDecimal();
+                sc.nextLine(); 
+
+                loansService.makePayment(accNumberPayment, paymentAmount)
+                        .ifPresentOrElse(
+                            loan -> System.out.println("Pago registrado exitosamente. Deuda restante: " + loan.getOutstandingAmt()),
+                            () -> System.out.println("No se pudo registrar el pago para la cuenta " + accNumberPayment + ". Verifique que haya saldo suficiente o que exista un préstamo.")
+                        );
+                break;
+
+            case "5": 
+                System.out.print("Ingrese el accountNumber de la cuenta: ");
+                String accNumberDebt = sc.nextLine().trim().toUpperCase();
+
+                loansService.calculateOutstanding(accNumberDebt)
+                        .ifPresentOrElse(
+                            debt -> System.out.println("Deuda actual de la cuenta " + accNumberDebt + ": " + debt),
+                            () -> System.out.println("No se encontró deuda para la cuenta " + accNumberDebt)
+                        );
+                break;
+
+            case "0": 
+                back = true;
+                break;
+
+            default:
+                System.out.println("Opción no válida. Intente de nuevo.");
+        }
+    }
+}
+
+
+
+
+
 
 private static void printCrudMenuAccount(String entityName) {
         System.out.println("\n--- " + entityName + " CRUD ---");
@@ -367,4 +462,16 @@ private static void printCrudMenuAccount(String entityName) {
         System.out.println("0. Back");
         System.out.print("Seleccione una opción: ");
     }
+
+    private static void printCrudMenuLoans(String entityName) {
+    System.out.println("\n--- " + entityName + "---");
+    System.out.println("1. Create");
+    System.out.println("2. Read by id");
+    System.out.println("3. List all");
+    System.out.println("4. Make Payment");
+    System.out.println("5. Check Outstanding Debt");
+    System.out.println("0. Back");
+    System.out.print("Seleccione una opción: ");
+}
+
 }
