@@ -1,7 +1,13 @@
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Scanner;
 
 import model.Account;
+import model.Loans;
+
 import services.AccountService;
+import services.LoanService;
+
 
 public class App {
     private static AccountService accountService=new AccountService();
@@ -33,8 +39,9 @@ public class App {
                         runCrudMenu(sc, "Balance");
                         break;
                     case "3":
-                        runCrudMenu(sc, "Loans");
+                        runCrudMenuLoans(sc);
                         break;
+
                     case "4":
                         runCrudMenu(sc, "Cards");
                         break;
@@ -118,4 +125,122 @@ public class App {
         System.out.println("0. Back");
         System.out.print("Seleccione una opción: ");
     }
+
+
+
+
+    private static LoanService loanService = new LoanService();
+
+private static void runCrudMenuLoans(Scanner sc) {
+    boolean back = false;
+
+    while (!back) {
+        printCrudMenuLoans("Loans");
+        String opt = sc.nextLine().trim();
+
+        switch (opt) {
+            case "1": // Create New Loan
+                try {
+                    System.out.println("\n=== Crear nuevo préstamo ===");
+                    System.out.print("Tipo de préstamo: ");
+                    String type = sc.nextLine().trim();
+
+                    System.out.print("Monto total del préstamo: ");
+                    BigDecimal totalLoan = new BigDecimal(sc.nextLine().trim());
+
+                    System.out.print("Monto pagado hasta ahora: ");
+                    BigDecimal amountPaid = new BigDecimal(sc.nextLine().trim());
+
+                    BigDecimal outstandingAmt = totalLoan.subtract(amountPaid);
+                    LocalDate date = LocalDate.now();
+
+                    Loans newLoan = new Loans(date, type, totalLoan, amountPaid, outstandingAmt);
+                    loanService.save(newLoan);
+
+                    System.out.println("Préstamo creado exitosamente.");
+                } catch (Exception e) {
+                    System.out.println("Error al crear el préstamo: " + e.getMessage());
+                }
+                break;
+
+            case "2": // Read by ID
+                System.out.print("Ingrese la fecha del préstamo (formato yyyy-MM-dd): ");
+                try {
+                    LocalDate searchDate = LocalDate.parse(sc.nextLine().trim());
+                    String id = searchDate.toString();
+
+                    loanService.findById(id).ifPresentOrElse(
+                        loan -> System.out.println("Préstamo encontrado: " + loan),
+                        () -> System.out.println("No se encontró ningún préstamo con esa fecha.")
+                    );
+                } catch (Exception e) {
+                    System.out.println("Fecha inválida. Use el formato correcto (yyyy-MM-dd).");
+                }
+                break;
+
+            case "3": // List all Loans
+                System.out.println("\n=== Lista de préstamos ===");
+                var loans = loanService.findAll();
+                if (loans.isEmpty()) {
+                    System.out.println("No hay préstamos registrados.");
+                } else {
+                    loans.forEach(System.out::println);
+                }
+                break;
+
+            case "4": // Abonar al crédito
+                System.out.print("Ingrese la fecha del préstamo (formato yyyy-MM-dd): ");
+                try {
+                    LocalDate dateAbono = LocalDate.parse(sc.nextLine().trim());
+                    String id = dateAbono.toString();
+
+                    var optionalLoan = loanService.findById(id);
+                    if (optionalLoan.isPresent()) {
+                        Loans loan = optionalLoan.get();
+
+                        System.out.println("Préstamo encontrado: " + loan);
+                        System.out.print("Ingrese el monto a abonar: ");
+                        BigDecimal abono = new BigDecimal(sc.nextLine().trim());
+
+                        BigDecimal nuevoPagado = loan.getAmountPaid().add(abono);
+                        BigDecimal nuevoPendiente = loan.getTotalLoan().subtract(nuevoPagado);
+
+                        // Actualiza los valores
+                        loan.setAmountPaid(nuevoPagado);
+                        loan.setOutstandingAmt(nuevoPendiente);
+
+                        loanService.save(loan);
+
+                        System.out.println("Abono realizado correctamente.");
+                        System.out.println("Nuevo monto pagado: " + nuevoPagado);
+                        System.out.println("Saldo pendiente: " + nuevoPendiente);
+                    } else {
+                        System.out.println("No se encontró un préstamo con esa fecha.");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error al procesar el abono: " + e.getMessage());
+                }
+                break;
+
+            case "0":
+                back = true;
+                break;
+
+            default:
+                System.out.println("Opción no válida. Intente de nuevo.");
+        }
+    }
+}
+
+
+private static void printCrudMenuLoans(String entityName) {
+    System.out.println("\n--- " + entityName + " ---");
+    System.out.println("1. Create New Loan");
+    System.out.println("2. Read by ID");
+    System.out.println("3. List all Loans");
+    System.out.println("4. Pay Towards the Loans");
+    System.out.println("0. Back");
+    System.out.print("Seleccione una opción: ");
+}
+
 }

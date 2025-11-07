@@ -10,4 +10,5 @@ public class Balance {
     private BigDecimal cashIn;
     private BigDecimal cashOut;
     private BigDecimal closingBalance;
+    
 }
