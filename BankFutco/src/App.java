@@ -47,7 +47,7 @@ public class App {
                         runCrudMenuLoans(sc, "Loans");
                         break;
                     case "4":
-                        runCrudMenu(sc, "Cards");
+                        runCrudMenuCards(sc, "Cards");
                         break;
                     case "0":
                         running = false;
@@ -80,7 +80,6 @@ public class App {
             switch (opt) {
                 case "1":
                     System.out.println("[" + entityName + "] Crear - placeholder");
-                    //Deben tomar los datos por consola, usar Scanner
                     number++;
                     String numStr = Integer.toString(number);
                     String accountNumber = "ACC0" + numStr;
@@ -151,69 +150,6 @@ public class App {
             }
         }
     }
-
-  
-    private static void runCrudMenu(Scanner sc, String entityName) {
-    boolean back = false;
-    while (!back) {
-        printCrudMenu(entityName);
-        String opt = sc.nextLine().trim();
-        switch (opt) {
-            case "1":
-                System.out.println("[" + entityName + "] Crear - placeholder");
-                break;
-            case "2":
-                System.out.print("[" + entityName + "] Leer por id - ingrese id: ");
-                String id = sc.nextLine().trim();
-                System.out.println("Buscar " + entityName + " con id=" + id + " - placeholder");
-                accountService.findById(id).ifPresentOrElse(
-                    acc -> System.out.println("Encontrado: " + accountService.findById(id).toString() + "Balance: " + balanceService.findByAccount(id).toString()),
-                    () -> System.out.println(entityName + " con id: " + id + " no encontrado.")
-                );
-                break;
-            case "3":
-                System.out.println("[" + entityName + "] Listar todos - placeholder");
-                //accountService.findAll().stream().forEach(System.out::println);
-                accountService.findAll().stream().forEach(acc -> System.out.println("Cuenta: "+ accountService.findById(acc.getAccountNumber()).toString() +"Balance: " + balanceService.findByAccount(acc.getAccountNumber()).toString()));
-                break;
-            case "4":
-                System.out.print("[" + entityName + "] Actualizar - ingrese id: ");
-                String idUp = sc.nextLine().trim();
-                accountService.findById(idUp).ifPresentOrElse(
-                    acc -> {
-                    //System.out.println("Actualizar " + entityName + " id: " + idUp + " - placeholder");
-                    System.out.print("Ingrese el nombre: ");
-                    String nameU = sc.nextLine().trim();
-                    System.out.print("Ingrese el email: ");
-                    String emailU = sc.nextLine().trim();
-                    System.out.print("Ingrese el telefono: ");
-                    String mobileNumberU = sc.nextLine().trim();
-                    System.out.print("Ingrese el tipo de cuenta(Savings o Checking): ");
-                    String accountTypeU = sc.nextLine().trim();
-                    System.out.print("Ingrese la direccion: ");
-                    String addressU = sc.nextLine().trim();
-                    Account updateAccount = new Account(idUp, nameU, emailU, mobileNumberU, accountTypeU, addressU); 
-                    accountService.save(updateAccount);
-                    System.out.println("cuenta actualizada con exito.");
-                },
-                    () -> System.out.println(entityName + " con id: " + idUp + " no encontrado.")
-                );
-                break;
-            case "5":
-                System.out.print("[" + entityName + "] Eliminar - ingrese id: ");
-                String idDel = sc.nextLine().trim();
-                System.out.println("Eliminar " + entityName + " id: " + idDel + " - placeholder");
-                accountService.deleteById(idDel);
-                balanceService.deleteById(idDel);
-                break;
-            case "0":
-                back = true;
-                break;
-            default:
-                System.out.println("Opción no válida. Intente de nuevo.");
-        }
-    }
-}
 
    
     private static void runCrudMenuBalance(Scanner sc, String entityName) {
@@ -520,17 +456,6 @@ private static void runCrudMenuCards(Scanner sc, String entityName) {
 
 
 private static void printCrudMenuAccount(String entityName) {
-        System.out.println("\n--- " + entityName + " CRUD ---");
-        System.out.println("1. Create");
-        System.out.println("2. Read by id");
-        System.out.println("3. List all");
-        System.out.println("4. Update");
-        System.out.println("5. Delete");
-        System.out.println("0. Back");
-        System.out.print("Seleccione una opción: ");
-    }
-
-        private static void printCrudMenu(String entityName) {
         System.out.println("\n--- " + entityName + " CRUD ---");
         System.out.println("1. Create");
         System.out.println("2. Read by id");
