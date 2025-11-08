@@ -4,16 +4,18 @@ import java.util.List;
 import java.util.Scanner;
 import model.Account;
 import model.Balance;
+import model.Cards;
 import model.Loans;
 import services.AccountService;
 import services.BalanceService;
+import services.CardService;
 import services.LoansService;
 
 public class App {
     private static AccountService accountService = new AccountService();
     private static BalanceService balanceService = new BalanceService();
     private static LoansService loansService = new LoansService();
-
+    private static CardService cardService = new CardService();
     public static void main(String[] args) throws Exception {
         /*accountService.findAll().stream().forEach(a->System.out.println(a));
         Account account = new Account("ACC010", "Johanny Valencia", "johanny.valencia@example.com", "3000000001",
@@ -426,7 +428,94 @@ private static void runCrudMenuLoans(Scanner sc, String entityName) {
 }
 
 
+private static void runCrudMenuCards(Scanner sc, String entityName) {
+        boolean back = false;
 
+        while (!back) {
+            System.out.println("\n--- " + entityName + " CRUD ---");
+            System.out.println("1. Crear tarjeta");
+            System.out.println("2. Consultar por ID");
+            System.out.println("3. Listar todas");
+            System.out.println("4. Realizar consumo");
+            System.out.println("5. Abonar a la tarjeta");
+            System.out.println("6. Eliminar tarjeta");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione una opción: ");
+            String opt = sc.nextLine().trim();
+
+            switch (opt) {
+                case "1":
+                    System.out.print("Ingrese número de cuenta para asignar tarjeta: ");
+                    String accNumber = sc.nextLine().trim().toUpperCase();
+                    if (accountService.findById(accNumber).isEmpty()) {
+                        System.out.println("Cuenta no encontrada.");
+                        break;
+                    }
+                    String cardNumber = "CARD" + accNumber.substring(3);
+                    Cards newCard = new Cards(cardNumber, "Debit", new BigDecimal("1000000"), BigDecimal.ZERO,
+                            accNumber);
+                    cardService.save(newCard);
+                    System.out.println("Tarjeta creada y asignada correctamente a " + accNumber);
+                    break;
+
+                case "2":
+                    System.out.print("Ingrese número de tarjeta: ");
+                    String id = sc.nextLine().trim().toUpperCase();
+                    cardService.findById(id).ifPresentOrElse(card -> {
+                        System.out.println(card);
+                        accountService.findById(card.getAccountNumber())
+                                .ifPresent(acc -> System.out.println("Propietario: " + acc.getName()));
+                    }, () -> System.out.println("Tarjeta no encontrada."));
+                    break;
+
+                case "3":
+                    System.out.println("--- Listado de tarjetas ---");
+                    cardService.findAll().forEach(card -> {
+                        System.out.println(card);
+                        accountService.findById(card.getAccountNumber())
+                                .ifPresent(acc -> System.out.println("→ Propietario: " + acc.getName()));
+                        System.out.println("--------------------------------------");
+                    });
+                    break;
+
+                case "4":
+                    System.out.print("Ingrese número de tarjeta: ");
+                    String idC = sc.nextLine().trim().toUpperCase();
+                    System.out.print("Ingrese monto del consumo: ");
+                    BigDecimal consumo = sc.nextBigDecimal();
+                    sc.nextLine();
+                    cardService.makeTransaction(idC, consumo, false)
+                            .ifPresent(c -> System.out.println("Consumo realizado: " + c));
+                    break;
+
+                case "5":
+                    System.out.print("Ingrese número de tarjeta: ");
+                    String idP = sc.nextLine().trim().toUpperCase();
+                    System.out.print("Ingrese monto a abonar: ");
+                    BigDecimal abono = sc.nextBigDecimal();
+                    sc.nextLine();
+                    cardService.makeTransaction(idP, abono, true)
+                            .ifPresent(c -> System.out.println("Abono realizado: " + c));
+                    break;
+
+                case "6":
+                    System.out.print("Ingrese número de tarjeta a eliminar: ");
+                    String idDel = sc.nextLine().trim().toUpperCase();
+                    if (cardService.deleteById(idDel))
+                        System.out.println("Tarjeta eliminada exitosamente.");
+                    else
+                        System.out.println("No se encontró la tarjeta.");
+                    break;
+
+                case "0":
+                    back = true;
+                    break;
+
+                default:
+                    System.out.println("Opción no válida.");
+            }
+        }
+    }
 
 
 
